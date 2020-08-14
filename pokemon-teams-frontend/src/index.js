@@ -45,16 +45,79 @@ function addButtonListeners() {
   const addButtons = document.querySelectorAll('button.add')
   const releaseButtons = document.querySelectorAll('button.release')
   addButtons.forEach((button) => {
-    // console.log('Added addButton to card.')
     button.addEventListener('click', function (e) {
-      console.log('Adding a pokemon.')
+      if (button.nextElementSibling.children.length < 6) {
+        addPokemon(e)
+      } else {
+        alert('Team can only have 6 pokemon.')
+      }
     })
   })
   releaseButtons.forEach((button) => {
     button.addEventListener('click', function (e) {
-      console.log(`Deleting ${button.parentElement}.`)
+      releasePokemon(e)
     })
   })
+}
+
+function addNewReleaseButtonListener(member) {
+  let button = member.firstElementChild
+  button.addEventListener('click', function (e) {
+    releasePokemon(e)
+  })
+}
+
+function addPokemon(e) {
+  const trainerId = e.target.attributes.getNamedItem('data-trainer-id').value
+  let configObj = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ trainer_id: trainerId }),
+  }
+  fetch(POKEMONS_URL, configObj)
+    .then(function (response) {
+      return response.json()
+    })
+    .then(function (data) {
+      console.log('Success:', data)
+      // this is not DRY; is basically a copy of the latter half of `renderPokemons`
+      const trainerTeam = document.querySelector(`[data-id="${data.trainer_id}"]`)
+      const list = trainerTeam.querySelector('ul')
+      const member = document.createElement('li')
+      member.innerHTML = `${data.nickname} (${data.species})
+      <button class="release" data-pokemon-id=${data.id}>Release</button>`
+      list.appendChild(member)
+      addNewReleaseButtonListener(member)
+    })
+    .catch(function (error) {
+      console.log(error.message)
+    })
+}
+
+function releasePokemon(e) {
+  const pokemonId = e.target.attributes.getNamedItem('data-pokemon-id').value
+  let configObj = {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ pokemon_id: pokemonId }),
+  }
+  fetch(`${POKEMONS_URL}/${pokemonId}`, configObj)
+    .then(function (response) {
+      return response.json()
+    })
+    .then(function (data) {
+      console.log('Success:', data)
+      e.target.parentNode.remove()
+    })
+    .catch(function (error) {
+      console.log(error.message)
+    })
 }
 
 document.addEventListener('DOMContentLoaded', function () {
