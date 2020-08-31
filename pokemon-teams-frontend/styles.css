@@ -54,6 +54,7 @@ body {
   button.release {
     float: right;
     background-color: #E1332D;
+    
   }
   
   @media only screen and (min-width: 500px) {
